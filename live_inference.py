@@ -27,26 +27,19 @@ classnames = ['neutral',
 ]
 
 #Creating the engine
-BATCH_SIZE = 1
-N_CLASSES = 8 # Our ResNet-50 is trained on a 1000 class ImageNet task
-ENGINE_NAME = "16workspace_size_64ms_inference.trt"
-trt_model = ONNXClassifierWrapper(ENGINE_NAME, [BATCH_SIZE, N_CLASSES])
+def load_tenssort_engine(engine_name):
+    BATCH_SIZE = 1
+    N_CLASSES = 8 # Our ResNet-50 is trained on a 1000 class ImageNet task
+    return ONNXClassifierWrapper(engine_name, [BATCH_SIZE, N_CLASSES])
 
-pathname = 'input_vid2.mp4'
-output_name = 'output.avi'
-
-cap = cv2.VideoCapture(pathname)
-frame_width = int(cap.get(3))
-frame_height = int(cap.get(4))
-fps = int(cap.get(cv2.CAP_PROP_FPS))
 
 def perform_inference(input_face_region):
    enlarged_region = transform_compose(input_face_region).unsqueeze(dim=0).numpy()
-   #Code to predict an example with model here.....
 
+   #Code to predict an example with model here.....
    return trt_model.predict(enlarged_region)
 
-   #Code to predict an example with model here
+
   
 
 face_haar_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -60,32 +53,39 @@ def identify_faces(img):
 
     return faces_rect
 
-fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-out = cv2.VideoWriter(output_name, fourcc, fps, (frame_width, frame_height))
 
-print("Starting video creation/inference")
-s = time.time()
-while True:
-    ret, img = cap.read()  # captures frame and returns boolean value and captured image
-    if not ret:
-        break
-    
-    #Detecting the faces
-    
+def create_output_vid(pathname, output_vid):
+    cap = cv2.VideoCapture(pathname)
+    frame_width = int(cap.get(3))
+    frame_height = int(cap.get(4))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
 
-    for (x, y, w, h) in identify_faces(img): #For each face
-        #Drawing the rectangle around the face
-        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), thickness=2) 
-        output_logit = perform_inference(img[y:y+h, x:x+w])
-        pred = torch.argmax(torch.softmax(torch.from_numpy(output_logit).squeeze(), dim=0), dim=0)
+    fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+    out = cv2.VideoWriter(output_name, fourcc, fps, (frame_width, frame_height))
+
+    while True:
+        ret, img = cap.read()  # captures frame and returns boolean value and captured image
+        if not ret:
+            break
         
-        cv2.putText(img, classnames[pred], (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        #Detecting the faces
+        
 
+        for (x, y, w, h) in identify_faces(img): #For each face
+            #Drawing the rectangle around the face
+            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), thickness=2) 
+            output_logit = perform_inference(img[y:y+h, x:x+w])
+            pred = torch.argmax(torch.softmax(torch.from_numpy(output_logit).squeeze(), dim=0), dim=0)
+            
+            cv2.putText(img, classnames[pred], (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+    
+        out.write(cv2.resize(img, (frame_width, frame_height)))
    
-    out.write(cv2.resize(img, (frame_width, frame_height)))
-   
-e = time.time()
-print("Finished")
-print(e - s)
-cap.release()
-out.release()
+
+    cap.release()
+    out.release()
+
+def delete_video(vidname):
+    if os.path.exists(vidname):
+        os.remove(vidname)
