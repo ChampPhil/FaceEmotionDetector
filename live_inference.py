@@ -7,6 +7,8 @@ import torch
 from onnx_helper import ONNXClassifierWrapper
 import cv2
 import time
+import sys
+import os
 
 #Transforms to convert raw images to inputs that can be understood by the model
 transform_compose = transforms.Compose([
@@ -61,7 +63,7 @@ def create_output_vid(pathname, output_vid):
     fps = int(cap.get(cv2.CAP_PROP_FPS))
 
     fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-    out = cv2.VideoWriter(output_name, fourcc, fps, (frame_width, frame_height))
+    out = cv2.VideoWriter(output_vid, fourcc, fps, (frame_width, frame_height))
 
     while True:
         ret, img = cap.read()  # captures frame and returns boolean value and captured image

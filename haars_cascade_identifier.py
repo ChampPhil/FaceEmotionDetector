@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 print(cv2.__version__)
-face_haar_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml') 
+
 
 cap = cv2.VideoCapture("/jetson-inference/ferplus/input_vid1.mp4")
 frame_width = int(cap.get(3))
@@ -17,17 +17,16 @@ while True:
     if not ret:
         break
     
-    #Detecting the faces
+    img = cv2.resize(img, (1280, 720))
+    
+    face_haar_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml') 
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces_rect = face_haar_cascade.detectMultiScale(
-        gray_img, 
-        scaleFactor=1.3, 
-        minNeighbors=3,
-    ) 
+
+    faces_rect = face_haar_cascade.detectMultiScale(gray_img,  scaleFactor=1.3, minNeighbors=5,) 
 
     for (x, y, w, h) in faces_rect: #For each face
         #Drawing the rectangle around the face
-        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), thickness=2) 
+        cv2.rectangle(img, (x, y-50), (x+w, y+h+10), (0, 255, 0), thickness=2) 
         
         #Resizing the region of interest to (224, 224)
         # cropping region of interest i.e. face area from  image
