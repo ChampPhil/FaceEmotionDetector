@@ -7,3 +7,6 @@ inferencer.py
 output.avi
 onnx_helper.py
 __pycache__
+mtcnn_identifier.py
+tensorrt_inferencer_experimenter.py
+haars_cascade_identifier.py 
