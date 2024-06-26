@@ -5,11 +5,21 @@ import sys
 
 from jetson_inference import detectNet
 import jetson_utils
-from jetson_utils import videoSource, videoOutput, Log
+from jetson_utils import videoSource, videoOutput, Log, cudaFromNumpy, cudaAllocMapped, cudaConvertColor
+
+import time
+
+try:
+    os.remove('output.avi')
+except Exception as e:
+    pass
 
 print(cv2.__version__)
 
-
+cap = cv2.VideoCapture('/jetson-inference/ferplus/input_vid2.mp4')
+frame_width = int(cap.get(3))
+frame_height = int(cap.get(4))
+fps = int(cap.get(cv2.CAP_PROP_FPS))
 fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 out = cv2.VideoWriter('/jetson-inference/ferplus/output.avi', fourcc, 30, (1280, 720))
 
@@ -25,19 +35,36 @@ net = detectNet(model="model/ssd-mobilenet.onnx", labels="model/labels.txt",
 
 net = detectNet("facedetect", sys.argv, 0.5)
 
-input_vid = videoSource("file:///jetson-inference/ferplus/input_vid1.mp4")
+
+def identify_faces(img):
+    bgr_img = cudaFromNumpy(img, isBGR=True)
+    rgb_img = cudaAllocMapped(width=bgr_img.width,
+                          height=bgr_img.height,
+						  format='rgb8')
+    cudaConvertColor(bgr_img, rgb_img)
+
+
+    #faces_rect = net.Detect(rgb_img, overlay="box,labels,conf")
+    faces_rect = net.Detect(rgb_img, 1280, 720, overlay="none")
+
+    results = []
+    for detection in faces_rect:
+        print(detection)
+        results.append([int(detection.Left), int(detection.Top), int(detection.Left + detection.Width), int(detection.Top + detection.Height)])
+    
+    return results
 
 
 print("\n\n\n\n\n\n\nBEGINNING DETECTION")
+s = time.time()
 while True:
-    img = input_vid.Capture()
-
-    if img is None: # timeout
-        continue  
+    ret, img = cap.read()  # captures frame and returns boolean value and captured image
+    
+    if not ret:
+        break
   
-    faces_rect = net.Detect(img, overlay="box,labels,conf")
-   
-    print("\n\n\nPrinting out each output")
+    img = cv2.resize(img, (1280, 720))
+    
     
     """
     for detection in faces_rect:
@@ -50,19 +77,18 @@ while True:
     sys.exit()
     """
 
-    bgr_img = jetson_utils.cudaAllocMapped(width=width, height=height, format='bgr8')
-    jetson_utils.cudaConvertColor(img, bgr_img)
+    
 
-    # Convert to numpy array
-    cv_img = jetson_utils.cudaToNumpy(bgr_img)
-
-    for detection in faces_rect: #For each face
+    
+    for (x, y, x2, y2) in identify_faces(img): #For each face
         #Drawing the rectangle around the face
-        cv2.rectangle(cv_img, (int(detection.Left), int(detection.Top)), (int(detection.Right), int(detection.Bottom)), (0, 255, 0), 2) 
+        cv2.rectangle(img, (x, y), (x2, y2), (0, 255, 0))
+       
         
-    out.write(cv2.resize(cv_img, (1280, 720)))
+    out.write(img)
    
-
+e = time.time()
 print("Finished")
+print(e - s)
 cap.release()
 out.release()
