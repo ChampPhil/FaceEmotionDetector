@@ -2,13 +2,19 @@
 
 ## Overview/Basic Understanding
 
-Facial emotion analysis is an intriguing application of deep learning, combining the power of artificial intelligence with human emotion recognition. This article explains a Python-based project that processes raw video sequences to detect faces, analyze emotions, and generate an annotated output video. Our pipeline leverages several sophisticated tools and frameworks, including Haar cascades, a custom-trained neural network based on the VGG16 architecture, and the NVIDIA TensorRT framework for optimization.
+Facial emotion analysis is an intriguing application of deep learning, combining the power of artificial intelligence with human emotion recognition. This article explains a Python-based project that processes raw video sequences to detect faces, analyze emotions, and generate an annotated output video. Our pipeline leverages several sophisticated tools and frameworks, including a TAO Detection Model, a custom-trained neural network based on the VGG16 architecture, and the NVIDIA TensorRT framework for optimization.
+
+To eloborate, my project offers two main options:
+   - Running facial emotion analysis on a preexisting video 
+
+   - Create a video in realtime, and then run facial emotion analysis on that newly created video
+
 
 <ins>The Pipeline Workflow is as Follows:</ins>
 
 - *Raw Video Input*: Capture or load a raw video sequence containing human faces.
   
-- *Face Detection*: Use Haar cascades to identify faces in each frame of the video.
+- *Face Detection*: Use a pretrained TAO Detection Model to identify faces in each frame of the video.
 
 - *Emotion Analysis*: Feed the preprocessed data (a.k.a the detected face) into a custom-trained Deep Neural Network (DNN) based on VGG16 to predict facial emotions.
 
@@ -21,7 +27,7 @@ The first step is to acquire a raw video sequence. In our instance, this is done
 
 ### Step 2: Face Detection Using Haar Cascades
 
-Haar cascades are a popular choice for real-time face detection. They work by training a cascade function on lots of positive and negative images, which is then used to detect objects in other images. The grayscale conversion of each frame is essential for accurate detection, followed by applying the Haar cascade classifier to identify faces.
+Train Adapt Optimize (TAO) Toolkit is a AI toolkit for taking purpose-built pre-trained AI models (*like one that identfies faces*) and customizing them with your own data. TAO adapts popular network architectures and backbones to your data, allowing you to train, fine tune, prune and export highly optimized and accurate AI models for edge deployment (on hardware like the Jetson Nano). In my instance, I used the "face-detect" TAO Model.
 
 
 ### Step 3: Emotion Analysis with Custom-Trained DNN
@@ -36,9 +42,35 @@ We use a custom-trained neural network based on the VGG16 architecture to perfor
 
 Finally, the project generates a new video sequence using OpenCV. This new video highlights the detected faces and labels the emotions. Each frame is annotated with rectangles around detected faces and text labels for the predicted emotions.
 
-### Conclusion
+
+
+## Requirements
+  
+-  Have the jetson-inference and jetson-utils libraries up and running
+
+-  Enter "pip install -r requirements.txt" into the CLI to install the approriate versions of necessary libraries
+
+## Using the Project from Jetson Nano CLI
+
+### Run Inference on a Preexisting Video
+   
+   -  Run the following command: "python3 main.py --input="INPUT_VIDNAME" --output="OUTPUT_VIDNAME". 
+
+      - **INPUT_VIDNAME** is the filepath to the preexisting video (you should put the video in the same directory as main.py so you only have to input the name of the video)
+         -  *NOTE*: For this argument, include the file extension. So instead of saying "input_vid1", enter "input_vid1.*avi*"
+
+      - **OUTPUT_VIDNAME** is what you want the name of the output video sequence (that visually represents detected faces and their corresponding emotions). The output video sequence will be created in a directory called 'analyzed_videos' that main.py automically generates. 
+         -  *NOTE*: For this argument, include the file extension. So instead of saying "output_vid1", enter "output_vid1.*avi*"
+
+
+### Run Inference on a Newly Created Video
+
+   - *NOTE*: You can only do this if you have a monitor and keyboard setup
+   
+   -  Run the following command: "python3 main.py --output="OUTPUT_VIDNAME". 
+
+## Conclusion 
 
 This project demonstrates a comprehensive pipeline for facial emotion analysis using deep learning. By integrating tools like Haar cascades, OpenCV, PyTorch, and TensorRT, we can efficiently process and analyze video data, providing meaningful insights into human emotions. The result is an enhanced video sequence that visually represents detected faces and their corresponding emotions, showcasing the power of AI in understanding human expressions.
 
 
-## Usage

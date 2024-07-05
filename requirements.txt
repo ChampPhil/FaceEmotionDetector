@@ -1,0 +1,7 @@
+jetson_utils==0.0.10
+numpy==1.13.3
+Pillow==10.4.0
+pycuda==2021.1
+tensorrt==10.2.0
+torch==1.10.0
+torchvision==0.18.1

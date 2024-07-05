@@ -38,19 +38,19 @@ net = detectNet("facedetect", sys.argv, 0.5)
 
 def identify_faces(img):
     bgr_img = cudaFromNumpy(img, isBGR=True)
-    rgb_img = cudaAllocMapped(width=bgr_img.width,
-                          height=bgr_img.height,
+    rgb_img = cudaAllocMapped(width=736,
+                          height=416,
 						  format='rgb8')
     cudaConvertColor(bgr_img, rgb_img)
 
 
     #faces_rect = net.Detect(rgb_img, overlay="box,labels,conf")
-    faces_rect = net.Detect(rgb_img, 1280, 720, overlay="none")
+    faces_rect = net.Detect(rgb_img, 736, 416, overlay="none")
 
     results = []
     for detection in faces_rect:
         print(detection)
-        results.append([int(detection.Left), int(detection.Top), int(detection.Left + detection.Width), int(detection.Top + detection.Height)])
+        results.append([int(detection.Left), int(detection.Top), int(detection.Right), int(detection.Bottom)])
     
     return results
 
@@ -63,7 +63,7 @@ while True:
     if not ret:
         break
   
-    img = cv2.resize(img, (1280, 720))
+    resized_img = cv2.resize(img, (736, 416))
     
     
     """
@@ -80,12 +80,12 @@ while True:
     
 
     
-    for (x, y, x2, y2) in identify_faces(img): #For each face
+    for (x, y, x2, y2) in identify_faces(resized_img): #For each face
         #Drawing the rectangle around the face
-        cv2.rectangle(img, (x, y), (x2, y2), (0, 255, 0))
+        cv2.rectangle(resized_img, (x, y), (x2, y2), (0, 255, 0))
        
         
-    out.write(img)
+    out.write(cv2.resize(resized_img, (1280, 720)))
    
 e = time.time()
 print("Finished")
